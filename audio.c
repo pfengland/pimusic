@@ -5,12 +5,13 @@ snd_pcm_t *pcm_handle;
 char *buff;
 int buff_size;
 snd_pcm_uframes_t frames;
+int rate=44100;
 
 void init_audio(void) {
 
   // alsa setup
   unsigned int pcm, tmp, dir;
-  int rate=44100, channels=2, seconds=1;
+  int channels=1;
 
   snd_pcm_hw_params_t *params;
 
@@ -45,7 +46,6 @@ void init_audio(void) {
     printf("error setting number of periods - %s\n", snd_strerror(pcm));
     exit(EXIT_FAILURE);
   }
-  //  int periodsize = 8192;
   int periodsize = 4096;
   if (pcm = snd_pcm_hw_params_set_buffer_size(pcm_handle, params, (periodsize * periods) >> 2) < 0) {
     printf("error setting buffer size - %s\n", snd_strerror(pcm));
