@@ -22,14 +22,6 @@ int direction = 0;
 int buttonState[5] = {1,1,1,1,1};
 
 
-void buttonChanged(int g, int state) {
-  if (state) {
-    printf("Button %d Released!\n", g - 1);    
-  } else {
-    printf("Button %d Pressed!\n", g - 1);
-  }
-}
-
 
 // audio thread function
 void* audio_main(void *arg) {
@@ -37,6 +29,7 @@ void* audio_main(void *arg) {
   int ret;
   double decay = 2;
   double amp = 1;
+  // maximum freq
   double freq = 200;
 
   init_audio();
@@ -44,7 +37,6 @@ void* audio_main(void *arg) {
   // calculate decay
   // how many samples it will take to decay
   int decay_samples = decay * rate;
-  int period_samples = 1.0/freq * rate;
   double sample_val = 0;
   
   printf("decay_samples: %d\n", decay_samples);
@@ -53,14 +45,7 @@ void* audio_main(void *arg) {
     
     for (int i=0; i<buff_size; i++) {
 
-      // current sample from oscillator (-1 to 1)
-      if ((sample % period_samples) > (period_samples / 2))
-	sample_val = 1;
-      else
-	sample_val = -1;
-
-      
-      // calculate decay (amp)
+      // calculate decay
       int cur_sample = sample % decay_samples;
       // percentage of the decay time we've reached
       double ratio = (double)cur_sample / (double)decay_samples;
@@ -70,10 +55,20 @@ void* audio_main(void *arg) {
       else
 	amp = ratio;
 
-      //      short sample_value = (double)(rand()>>16) * amp;
-      //      printf("sample_value: %d\n",sample_value);
 
-      buff[i] = sample_val * amp * 0.001 * 32767;
+      int period_samples = (1.0/(freq*(amp*0.2+0.8))) * rate;
+
+      
+      // current sample from oscillator (-1 to 1)
+      if ((sample % period_samples) > (period_samples / 2))
+	sample_val = 1;
+      else
+	sample_val = -1;
+
+     
+      
+
+      buff[i] = sample_val * amp * 0.0001 * 32767;
       
       sample++;
     }
@@ -128,13 +123,11 @@ int main(int argc, char *argv[]) {
       state = GET_GPIO(g) ? 1 : 0;
 
       if (state != buttonState[g]) {
-	//	buttonChanged(g, state);
 	buttonState[g] = state;
 
 	// record the sample the button was pressed at
 	if (g == 2 && !state)
 	  direction = !direction;
-	  //	  sample_pressed = sample;
       }
     }
   }
